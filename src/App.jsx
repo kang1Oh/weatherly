@@ -8,7 +8,7 @@ import { HealthIndex } from './components/HealthIndex';
 import { LifestyleToggle } from './components/LifestyleToggle';
 
 // Mock weather data generator
-const generateWeatherData = (city: string, country: string) => {
+const generateWeatherData = (city, country) => {
   const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Heavy Rain', 'Clear'];
   const descriptions = [
     'Perfect weather for outdoor activities',
@@ -59,8 +59,8 @@ const generateWeeklyForecast = () => {
 export default function App() {
   const [currentWeather, setCurrentWeather] = useState(generateWeatherData('London', 'United Kingdom'));
   const [weeklyForecast] = useState(generateWeeklyForecast());
-  const [lifestyleMode, setLifestyleMode] = useState<'outfit' | 'activity' | 'both'>('both');
-  const [favoriteCities, setFavoriteCities] = useState<string[]>([]);
+  const [lifestyleMode, setLifestyleMode] = useState('both'); // removed union type
+  const [favoriteCities, setFavoriteCities] = useState([]);
 
   // Load favorites from localStorage
   useEffect(() => {
@@ -75,11 +75,11 @@ export default function App() {
     localStorage.setItem('weatherly-favorites', JSON.stringify(favoriteCities));
   }, [favoriteCities]);
 
-  const handleCitySelect = (city: string, country: string) => {
+  const handleCitySelect = (city, country) => {
     setCurrentWeather(generateWeatherData(city, country));
   };
 
-  const handleToggleFavorite = (cityCountry: string) => {
+  const handleToggleFavorite = (cityCountry) => {
     setFavoriteCities(prev => 
       prev.includes(cityCountry) 
         ? prev.filter(c => c !== cityCountry)
