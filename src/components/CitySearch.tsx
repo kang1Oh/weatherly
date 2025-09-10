@@ -71,7 +71,7 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: C
         </div>
         
         {showSuggestions && searchTerm && (
-          <Card className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-y-auto">
+          <Card className="absolute top-full left-0 right-0 z-20 mt-1 max-h-60 overflow-y-auto">
             <div className="p-2">
               {filteredCities.length > 0 ? (
                 filteredCities.slice(0, 8).map(({ city, country }, index) => (
