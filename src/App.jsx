@@ -7,81 +7,54 @@ import { WeeklyForecast } from './components/WeeklyForecast';
 import { HealthIndex } from './components/HealthIndex';
 import { LifestyleToggle } from './components/LifestyleToggle';
 
-// Mock weather data generator
-const generateWeatherData = (city, country) => {
-  const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Heavy Rain', 'Clear'];
-  const descriptions = [
-    'Perfect weather for outdoor activities',
-    'A beautiful day with some clouds',
-    'Overcast but pleasant',
-    'Light showers expected',
-    'Stay indoors, heavy rainfall',
-    'Crystal clear skies'
-  ];
-  
-  const condition = conditions[Math.floor(Math.random() * conditions.length)];
-  const temp = Math.floor(Math.random() * 35) + 5; // 5-40°C
-  
-  return {
-    city,
-    country,
-    temperature: temp,
-    condition,
-    humidity: Math.floor(Math.random() * 40) + 40, // 40-80%
-    windSpeed: Math.floor(Math.random() * 30) + 5, // 5-35 km/h
-    feelsLike: temp + Math.floor(Math.random() * 6) - 3, // ±3 degrees
-    description: descriptions[conditions.indexOf(condition)]
-  };
-};
-
-// Generate weekly forecast
-const generateWeeklyForecast = () => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const conditions = ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain', 'Clear'];
-  
-  return days.map((day, index) => {
-    const date = new Date();
-    date.setDate(date.getDate() + index);
-    const high = Math.floor(Math.random() * 20) + 15; // 15-35°C
-    const low = high - Math.floor(Math.random() * 10) - 5; // 5-15°C lower
-    
-    return {
-      day,
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      temperature: { high, low },
-      condition: conditions[Math.floor(Math.random() * conditions.length)],
-      precipitation: Math.floor(Math.random() * 100),
-      windSpeed: Math.floor(Math.random() * 25) + 5
-    };
-  });
-};
+// API Services
+import { fetchWeather } from './services/weatherService';
+import { geocodeCity } from './services/geocodingService';
 
 export default function App() {
-  const [currentWeather, setCurrentWeather] = useState(generateWeatherData('London', 'United Kingdom'));
-  const [weeklyForecast] = useState(generateWeeklyForecast());
-  const [lifestyleMode, setLifestyleMode] = useState('both'); // removed union type
+  const [currentWeather, setCurrentWeather] = useState(null);
+  const [weeklyForecast, setWeeklyForecast] = useState([]);
+  const [lifestyleMode, setLifestyleMode] = useState('both');
   const [favoriteCities, setFavoriteCities] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Load favorites from localStorage
+  // Load favorites
   useEffect(() => {
     const saved = localStorage.getItem('weatherly-favorites');
-    if (saved) {
-      setFavoriteCities(JSON.parse(saved));
-    }
+    if (saved) setFavoriteCities(JSON.parse(saved));
   }, []);
 
-  // Save favorites to localStorage
+  // Save favorites
   useEffect(() => {
     localStorage.setItem('weatherly-favorites', JSON.stringify(favoriteCities));
   }, [favoriteCities]);
 
-  const handleCitySelect = (city, country) => {
-    setCurrentWeather(generateWeatherData(city, country));
+  // Default load (London)
+  useEffect(() => {
+    handleCitySelect("London");
+  }, []);
+
+  const handleCitySelect = async (city) => {
+    try {
+      setLoading(true);
+      const results = await geocodeCity(city);
+      if (results.length === 0) throw new Error("City not found");
+
+      const { lat, lon, city: resolvedCity, country } = results[0];
+      const { current, forecast } = await fetchWeather(lat, lon, resolvedCity, country);
+
+      setCurrentWeather(current);
+      setWeeklyForecast(forecast);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleToggleFavorite = (cityCountry) => {
-    setFavoriteCities(prev => 
-      prev.includes(cityCountry) 
+    setFavoriteCities(prev =>
+      prev.includes(cityCountry)
         ? prev.filter(c => c !== cityCountry)
         : [...prev, cityCountry]
     );
@@ -112,39 +85,42 @@ export default function App() {
           <LifestyleToggle mode={lifestyleMode} onModeChange={setLifestyleMode} />
         </div>
 
-        {/* Main Weather Display */}
-        <div className="mb-8">
-          <WeatherHeader weather={currentWeather} />
-        </div>
+        {loading && <p className="text-center">Loading weather...</p>}
 
-        {/* Suggestions Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-          {(lifestyleMode === 'outfit' || lifestyleMode === 'both') && (
-            <OutfitSuggestion
-              temperature={currentWeather.temperature}
-              condition={currentWeather.condition}
-              humidity={currentWeather.humidity}
-            />
-          )}
-          
-          {(lifestyleMode === 'activity' || lifestyleMode === 'both') && (
-            <ActivitySuggestion
-              temperature={currentWeather.temperature}
-              condition={currentWeather.condition}
-              windSpeed={currentWeather.windSpeed}
-            />
-          )}
-          
-          <HealthIndex
-            temperature={currentWeather.temperature}
-            humidity={currentWeather.humidity}
-            windSpeed={currentWeather.windSpeed}
-            condition={currentWeather.condition}
-          />
-        </div>
+        {currentWeather && (
+          <>
+            <div className="mb-8">
+              <WeatherHeader weather={currentWeather} />
+            </div>
 
-        {/* Weekly Forecast */}
-        <WeeklyForecast forecast={weeklyForecast} mode={lifestyleMode} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+              {(lifestyleMode === 'outfit' || lifestyleMode === 'both') && (
+                <OutfitSuggestion
+                  temperature={currentWeather.temperature}
+                  condition={currentWeather.condition}
+                  humidity={currentWeather.humidity}
+                />
+              )}
+              {(lifestyleMode === 'activity' || lifestyleMode === 'both') && (
+                <ActivitySuggestion
+                  temperature={currentWeather.temperature}
+                  condition={currentWeather.condition}
+                  windSpeed={currentWeather.windSpeed}
+                />
+              )}
+              <HealthIndex
+                temperature={currentWeather.temperature}
+                humidity={currentWeather.humidity}
+                windSpeed={currentWeather.windSpeed}
+                condition={currentWeather.condition}
+                lat={currentWeather.lat}
+                lon={currentWeather.lon}
+              />
+            </div>
+
+            <WeeklyForecast forecast={weeklyForecast} mode={lifestyleMode} />
+          </>
+        )}
 
         {/* Footer */}
         <div className="text-center mt-12 text-sm text-gray-500 dark:text-gray-400">

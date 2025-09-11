@@ -1,36 +1,51 @@
-import { useState } from 'react';
-import { Search, MapPin, Star, StarOff } from 'lucide-react';
-import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { Card } from './ui/card';
-import { Badge } from './ui/badge';
+import { useState, useEffect } from "react";
+import { Search, MapPin, Star, StarOff } from "lucide-react";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Badge } from "./ui/badge";
 
-// Mock popular cities for search suggestions
-const popularCities = [
-  { city: 'London', country: 'United Kingdom' },
-  { city: 'New York', country: 'United States' },
-  { city: 'Tokyo', country: 'Japan' },
-  { city: 'Paris', country: 'France' },
-  { city: 'Sydney', country: 'Australia' },
-  { city: 'Dubai', country: 'UAE' },
-  { city: 'Singapore', country: 'Singapore' },
-  { city: 'Toronto', country: 'Canada' },
-  { city: 'Berlin', country: 'Germany' },
-  { city: 'Barcelona', country: 'Spain' }
-];
+// API Services
+import { geocodeCity } from "../services/geocodingService";
 
-export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
-  const [searchTerm, setSearchTerm] = useState('');
+interface CitySearchProps {
+  onCitySelect: (city: string, country: string, lat?: number, lon?: number) => void;
+  favoriteCities: string[];
+  onToggleFavorite: (cityCountry: string) => void;
+}
+
+export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: CitySearchProps) {
+  const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([] as any[]);
+  const [loading, setLoading] = useState(false);
 
-  const filteredCities = popularCities.filter(({ city, country }) =>
-    city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    country.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Fetch city suggestions as user types
+  useEffect(() => {
+    if (searchTerm.length < 2) {
+      setSuggestions([]);
+      return;
+    }
 
-  const handleCitySelect = (city, country) => {
-    onCitySelect(city, country);
-    setSearchTerm('');
+    const timeout = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const results = await geocodeCity(searchTerm, 5);
+        setSuggestions(results);
+      } catch (err) {
+        console.error(err);
+        setSuggestions([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 400); // debounce typing
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  const handleCitySelect = (city: string, country: string, lat?: number, lon?: number) => {
+    onCitySelect(city, country, lat, lon);
+    setSearchTerm("");
     setShowSuggestions(false);
   };
 
@@ -39,12 +54,11 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
     onToggleFavorite(cityCountry);
   };
 
-  const getFavoriteCityList = () => {
-    return favoriteCities.map(cityCountry => {
-      const [city, country] = cityCountry.split(', ');
+  const getFavoriteCityList = () =>
+    favoriteCities.map((cityCountry) => {
+      const [city, country] = cityCountry.split(", ");
       return { city, country };
     });
-  };
 
   return (
     <div className="space-y-4">
@@ -63,20 +77,24 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
             className="pl-10"
           />
         </div>
-        
+
         {showSuggestions && searchTerm && (
           <Card className="absolute top-full left-0 right-0 z-10 mt-1 max-h-60 overflow-y-auto">
             <div className="p-2">
-              {filteredCities.length > 0 ? (
-                filteredCities.slice(0, 8).map(({ city, country }, index) => (
+              {loading ? (
+                <div className="p-4 text-center text-muted-foreground">Loading...</div>
+              ) : suggestions.length > 0 ? (
+                suggestions.map(({ city, country, lat, lon }, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer group"
-                    onClick={() => handleCitySelect(city, country)}
+                    onClick={() => handleCitySelect(city, country, lat, lon)}
                   >
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <span>{city}, {country}</span>
+                      <span>
+                        {city}, {country}
+                      </span>
                     </div>
                     <Button
                       variant="ghost"
@@ -96,9 +114,7 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-muted-foreground">
-                  No cities found
-                </div>
+                <div className="p-4 text-center text-muted-foreground">No cities found</div>
               )}
             </div>
           </Card>

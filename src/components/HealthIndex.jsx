@@ -12,78 +12,83 @@ const getUVIndex = (condition, temperature) => {
 };
 
 const getComfortIndex = (temperature, humidity) => {
-  let score = 50; // Base comfort score
-  
-  if (temperature >= 20 && temperature <= 25) {
-    score += 30;
-  } else if (temperature >= 15 && temperature <= 30) {
-    score += 15;
-  } else if (temperature >= 10 && temperature <= 35) {
-    score += 5;
-  } else {
-    score -= 20;
-  }
-  
-  if (humidity >= 40 && humidity <= 60) {
-    score += 20;
-  } else if (humidity >= 30 && humidity <= 70) {
-    score += 10;
-  } else {
-    score -= 15;
-  }
-  
+  let score = 50;
+
+  if (temperature >= 20 && temperature <= 25) score += 30;
+  else if (temperature >= 15 && temperature <= 30) score += 15;
+  else if (temperature >= 10 && temperature <= 35) score += 5;
+  else score -= 20;
+
+  if (humidity >= 40 && humidity <= 60) score += 20;
+  else if (humidity >= 30 && humidity <= 70) score += 10;
+  else score -= 15;
+
   return Math.max(0, Math.min(100, score));
 };
 
-const getAirQualityMock = (condition, windSpeed) => {
-  const isRainy = condition.toLowerCase().includes('rain');
-  const isWindy = windSpeed > 15;
-  
-  if (isRainy) return { aqi: 25, description: 'Good', color: 'text-green-600' };
-  if (isWindy) return { aqi: 35, description: 'Good', color: 'text-green-600' };
-  return { aqi: 55, description: 'Moderate', color: 'text-yellow-600' };
+const getAirQualityEstimate = (
+  condition,
+  windSpeed,
+  humidity,
+  temperature
+) => {
+  const cond = condition.toLowerCase();
+
+  let aqi = 55;
+  let description = 'Moderate';
+  let color = 'text-yellow-600';
+
+  if (cond.includes('rain')) {
+    aqi = 25;
+    description = 'Good';
+    color = 'text-green-600';
+  } else if (windSpeed > 15) {
+    aqi = 35;
+    description = 'Good';
+    color = 'text-green-600';
+  } else if (humidity > 80 && (cond.includes('cloud') || cond.includes('fog'))) {
+    aqi = 75;
+    description = 'Unhealthy for Sensitive Groups';
+    color = 'text-orange-600';
+  } else if (temperature > 32 && windSpeed < 5) {
+    aqi = 95;
+    description = 'Unhealthy';
+    color = 'text-red-600';
+  }
+
+  return { aqi, description, color };
 };
 
 const getHealthTips = (temperature, humidity, condition) => {
   const tips = [];
   const isSunny = condition.toLowerCase().includes('sun');
   const isRainy = condition.toLowerCase().includes('rain');
-  
+
   if (isSunny && temperature > 25) {
     tips.push('Apply sunscreen SPF 30+');
     tips.push('Stay hydrated - drink water regularly');
   }
-  
-  if (temperature > 30) {
-    tips.push('Avoid outdoor activities during peak hours (10AM-4PM)');
-  }
-  
+  if (temperature > 30) tips.push('Avoid outdoor activities during peak hours (10AM-4PM)');
   if (temperature < 10) {
     tips.push('Keep extremities warm');
     tips.push('Layer clothing for better insulation');
   }
-  
-  if (humidity > 70) {
-    tips.push('Choose breathable, moisture-wicking fabrics');
-  }
-  
-  if (isRainy) {
-    tips.push('Stay dry to avoid catching cold');
-  }
-  
+  if (humidity > 70) tips.push('Choose breathable, moisture-wicking fabrics');
+  if (isRainy) tips.push('Stay dry to avoid catching cold');
+
   return tips;
 };
 
 export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
   const uvIndex = getUVIndex(condition, temperature);
   const comfortIndex = getComfortIndex(temperature, humidity);
-  const airQuality = getAirQualityMock(condition, windSpeed);
+  const airQuality = getAirQualityEstimate(condition, windSpeed, humidity, temperature);
   const healthTips = getHealthTips(temperature, humidity, condition);
 
   return (
     <Card className="p-6">
       <h3 className="text-xl font-semibold mb-4">Health & Comfort</h3>
-      
+
       <div className="space-y-6">
         {/* Comfort Index */}
         <div className="space-y-2">
@@ -95,9 +100,7 @@ export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
             <span className="text-sm font-medium">{comfortIndex}%</span>
           </div>
           <Progress value={comfortIndex} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            Based on temperature and humidity levels
-          </p>
+          <p className="text-xs text-muted-foreground">Based on temperature and humidity levels</p>
         </div>
 
         {/* UV Index */}
@@ -107,7 +110,7 @@ export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
               <Sun className="w-4 h-4 text-orange-500" />
               <span className="font-medium">UV Index</span>
             </div>
-            <Badge variant={uvIndex.level > 6 ? "destructive" : uvIndex.level > 3 ? "default" : "secondary"}>
+            <Badge variant={uvIndex.level > 6 ? 'destructive' : uvIndex.level > 3 ? 'default' : 'secondary'}>
               {uvIndex.level} - {uvIndex.description}
             </Badge>
           </div>
@@ -119,7 +122,7 @@ export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Wind className="w-4 h-4 text-green-500" />
-              <span className="font-medium">Air Quality</span>
+              <span className="font-medium">Air Quality Estimate</span>
             </div>
             <span className={`text-sm font-medium ${airQuality.color}`}>
               AQI {airQuality.aqi} - {airQuality.description}
