@@ -1,16 +1,9 @@
-import { Sun, Shield, Droplets, Wind, Thermometer } from 'lucide-react';
+import { Sun, Shield, Wind, Thermometer } from 'lucide-react';
 import { Card } from './ui/card';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 
-interface HealthIndexProps {
-  temperature: number;
-  humidity: number;
-  windSpeed: number;
-  condition: string;
-}
-
-const getUVIndex = (condition: string, temperature: number) => {
+const getUVIndex = (condition, temperature) => {
   const isSunny = condition.toLowerCase().includes('sun') || condition.toLowerCase().includes('clear');
   if (!isSunny) return { level: 2, description: 'Low' };
   if (temperature > 25) return { level: 8, description: 'Very High' };
@@ -18,7 +11,7 @@ const getUVIndex = (condition: string, temperature: number) => {
   return { level: 4, description: 'Moderate' };
 };
 
-const getComfortIndex = (temperature: number, humidity: number) => {
+const getComfortIndex = (temperature, humidity) => {
   let score = 50; // Base comfort score
   
   // Temperature comfort (optimal around 20-25°C)
@@ -44,7 +37,7 @@ const getComfortIndex = (temperature: number, humidity: number) => {
   return Math.max(0, Math.min(100, score));
 };
 
-const getAirQualityMock = (condition: string, windSpeed: number) => {
+const getAirQualityMock = (condition, windSpeed) => {
   const isRainy = condition.toLowerCase().includes('rain');
   const isWindy = windSpeed > 15;
   
@@ -53,7 +46,7 @@ const getAirQualityMock = (condition: string, windSpeed: number) => {
   return { aqi: 55, description: 'Moderate', color: 'text-yellow-600' };
 };
 
-const getHealthTips = (temperature: number, humidity: number, condition: string) => {
+const getHealthTips = (temperature, humidity, condition) => {
   const tips = [];
   const isSunny = condition.toLowerCase().includes('sun');
   const isRainy = condition.toLowerCase().includes('rain');
@@ -83,7 +76,7 @@ const getHealthTips = (temperature: number, humidity: number, condition: string)
   return tips;
 };
 
-export function HealthIndex({ temperature, humidity, windSpeed, condition }: HealthIndexProps) {
+export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
   const uvIndex = getUVIndex(condition, temperature);
   const comfortIndex = getComfortIndex(temperature, humidity);
   const airQuality = getAirQualityMock(condition, windSpeed);

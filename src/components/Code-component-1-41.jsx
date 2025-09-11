@@ -1,12 +1,7 @@
 import { Shirt, Activity, MoreHorizontal } from 'lucide-react';
 import { Button } from './ui/button';
 
-interface LifestyleToggleProps {
-  mode: 'outfit' | 'activity' | 'both';
-  onModeChange: (mode: 'outfit' | 'activity' | 'both') => void;
-}
-
-export function LifestyleToggle({ mode, onModeChange }: LifestyleToggleProps) {
+export function LifestyleToggle({ mode, onModeChange }) {
   return (
     <div className="flex items-center space-x-2 bg-muted p-1 rounded-lg">
       <Button

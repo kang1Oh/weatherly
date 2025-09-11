@@ -2,25 +2,18 @@ import { Bike, Home, BookOpen, Gamepad2, Coffee, Mountain, Waves, TreePine } fro
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
-interface ActivitySuggestionProps {
-  temperature: number;
-  condition: string;
-  windSpeed: number;
-}
-
-const getActivitySuggestions = (temp: number, condition: string, windSpeed: number) => {
+const getActivitySuggestions = (temp, condition, windSpeed) => {
   const isRainy = condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('storm');
   const isSunny = condition.toLowerCase().includes('sun') || condition.toLowerCase().includes('clear');
   const isWindy = windSpeed > 20;
   
   let activities = {
-    outdoor: [] as { name: string; icon: any; reason: string }[],
-    indoor: [] as { name: string; icon: any; reason: string }[],
+    outdoor: [],
+    indoor: [],
     primaryIcon: Home,
     primaryActivity: ''
   };
 
-  // Temperature and weather-based activities
   if (isRainy) {
     activities.indoor = [
       { name: 'Read a good book', icon: BookOpen, reason: 'Perfect rainy day activity' },
@@ -78,7 +71,6 @@ const getActivitySuggestions = (temp: number, condition: string, windSpeed: numb
     activities.primaryActivity = 'Hot weather activities';
   }
 
-  // Wind adjustments
   if (isWindy && !isRainy) {
     activities.indoor.push(
       { name: 'Indoor sports', icon: Home, reason: 'Avoid strong winds' }
@@ -88,7 +80,7 @@ const getActivitySuggestions = (temp: number, condition: string, windSpeed: numb
   return activities;
 };
 
-export function ActivitySuggestion({ temperature, condition, windSpeed }: ActivitySuggestionProps) {
+export function ActivitySuggestion({ temperature, condition, windSpeed }) {
   const activities = getActivitySuggestions(temperature, condition, windSpeed);
   const PrimaryIcon = activities.primaryIcon;
 
@@ -108,13 +100,16 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }: Activi
           <div>
             <h4 className="font-medium mb-2 text-green-600">🌳 Outdoor Activities:</h4>
             <div className="space-y-2">
-              {activities.outdoor.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <activity.icon className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium">{activity.name}</span>
-                  <span className="text-xs text-muted-foreground">- {activity.reason}</span>
-                </div>
-              ))}
+              {activities.outdoor.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Icon className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium">{activity.name}</span>
+                    <span className="text-xs text-muted-foreground">- {activity.reason}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -123,13 +118,16 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }: Activi
           <div>
             <h4 className="font-medium mb-2 text-blue-600">🏠 Indoor Activities:</h4>
             <div className="space-y-2">
-              {activities.indoor.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <activity.icon className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium">{activity.name}</span>
-                  <span className="text-xs text-muted-foreground">- {activity.reason}</span>
-                </div>
-              ))}
+              {activities.indoor.map((activity, index) => {
+                const Icon = activity.icon;
+                return (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Icon className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium">{activity.name}</span>
+                    <span className="text-xs text-muted-foreground">- {activity.reason}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

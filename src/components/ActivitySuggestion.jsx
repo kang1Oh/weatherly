@@ -2,20 +2,14 @@ import { Bike, Home, BookOpen, Gamepad2, Coffee, Mountain, Waves, TreePine } fro
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
-interface ActivitySuggestionProps {
-  temperature: number;
-  condition: string;
-  windSpeed: number;
-}
-
-const getActivitySuggestions = (temp: number, condition: string, windSpeed: number) => {
+const getActivitySuggestions = (temp, condition, windSpeed) => {
   const isRainy = condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('storm');
   const isSunny = condition.toLowerCase().includes('sun') || condition.toLowerCase().includes('clear');
   const isWindy = windSpeed > 20;
   
   let activities = {
-    outdoor: [] as { name: string; icon: any; reason: string }[],
-    indoor: [] as { name: string; icon: any; reason: string }[],
+    outdoor: [],
+    indoor: [],
     primaryIcon: Home,
     primaryActivity: ''
   };
@@ -88,7 +82,7 @@ const getActivitySuggestions = (temp: number, condition: string, windSpeed: numb
   return activities;
 };
 
-export function ActivitySuggestion({ temperature, condition, windSpeed }: ActivitySuggestionProps) {
+export function ActivitySuggestion({ temperature, condition, windSpeed }) {
   const activities = getActivitySuggestions(temperature, condition, windSpeed);
   const PrimaryIcon = activities.primaryIcon;
 

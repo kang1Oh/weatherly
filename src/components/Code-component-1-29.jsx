@@ -5,12 +5,6 @@ import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
-interface CitySearchProps {
-  onCitySelect: (city: string, country: string) => void;
-  favoriteCities: string[];
-  onToggleFavorite: (cityCountry: string) => void;
-}
-
 // Mock popular cities for search suggestions
 const popularCities = [
   { city: 'London', country: 'United Kingdom' },
@@ -25,7 +19,7 @@ const popularCities = [
   { city: 'Barcelona', country: 'Spain' }
 ];
 
-export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: CitySearchProps) {
+export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -34,13 +28,13 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: C
     country.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCitySelect = (city: string, country: string) => {
+  const handleCitySelect = (city, country) => {
     onCitySelect(city, country);
     setSearchTerm('');
     setShowSuggestions(false);
   };
 
-  const handleToggleFavorite = (city: string, country: string) => {
+  const handleToggleFavorite = (city, country) => {
     const cityCountry = `${city}, ${country}`;
     onToggleFavorite(cityCountry);
   };

@@ -2,28 +2,13 @@ import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer } from 'lucide-react
 import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
-interface WeatherData {
-  city: string;
-  country: string;
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
-  feelsLike: number;
-  description: string;
-}
-
-interface WeatherHeaderProps {
-  weather: WeatherData;
-}
-
 const weatherBackgrounds = {
   sunny: "https://images.unsplash.com/photo-1553775556-a5b1a88abb54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMHdlYXRoZXIlMjBiYWNrZ3JvdW5kJTIwZ3JhZGllbnQlMjBza3l8ZW58MXx8fHwxNzU3NDY2NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   rainy: "https://images.unsplash.com/photo-1599806112354-67f8b5425a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyYWlueSUyMHdlYXRoZXIlMjBjbG91ZHMlMjBkYXJrJTIwc2t5fGVufDF8fHx8MTc1NzQ2NjQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
   cloudy: "https://images.unsplash.com/photo-1553775556-a5b1a88abb54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMHdlYXRoZXIlMjBiYWNrZ3JvdW5kJTIwZ3JhZGllbnQlMjBza3l8ZW58MXx8fHwxNzU3NDY2NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
 };
 
-const getWeatherIcon = (condition: string) => {
+const getWeatherIcon = (condition) => {
   const cond = condition.toLowerCase();
   if (cond.includes('sun') || cond.includes('clear')) return Sun;
   if (cond.includes('rain') || cond.includes('storm')) return CloudRain;
@@ -31,14 +16,14 @@ const getWeatherIcon = (condition: string) => {
   return Sun;
 };
 
-const getBackgroundImage = (condition: string) => {
+const getBackgroundImage = (condition) => {
   const cond = condition.toLowerCase();
   if (cond.includes('sun') || cond.includes('clear')) return weatherBackgrounds.sunny;
   if (cond.includes('rain') || cond.includes('storm')) return weatherBackgrounds.rainy;
   return weatherBackgrounds.cloudy;
 };
 
-export function WeatherHeader({ weather }: WeatherHeaderProps) {
+export function WeatherHeader({ weather }) {
   const WeatherIcon = getWeatherIcon(weather.condition);
   const backgroundImage = getBackgroundImage(weather.condition);
 

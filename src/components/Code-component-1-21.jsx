@@ -2,19 +2,13 @@ import { Shirt, Coat, Umbrella, Sun, Snowflake } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
-interface OutfitSuggestionProps {
-  temperature: number;
-  condition: string;
-  humidity: number;
-}
-
-const getOutfitSuggestion = (temp: number, condition: string, humidity: number) => {
+const getOutfitSuggestion = (temp, condition, humidity) => {
   const isRainy = condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('storm');
   const isWindy = condition.toLowerCase().includes('wind');
   
   let outfit = {
-    clothes: [] as string[],
-    accessories: [] as string[],
+    clothes: [],
+    accessories: [],
     icon: Shirt,
     color: 'bg-blue-500'
   };
@@ -58,7 +52,7 @@ const getOutfitSuggestion = (temp: number, condition: string, humidity: number) 
   return outfit;
 };
 
-const getMotivationalQuote = (condition: string) => {
+const getMotivationalQuote = (condition) => {
   const cond = condition.toLowerCase();
   if (cond.includes('sun') || cond.includes('clear')) {
     return "Sunny days are perfect for new beginnings! ☀️";
@@ -72,7 +66,7 @@ const getMotivationalQuote = (condition: string) => {
   return "Make today amazing, regardless of the weather! 🌟";
 };
 
-export function OutfitSuggestion({ temperature, condition, humidity }: OutfitSuggestionProps) {
+export function OutfitSuggestion({ temperature, condition, humidity }) {
   const outfit = getOutfitSuggestion(temperature, condition, humidity);
   const quote = getMotivationalQuote(condition);
   const OutfitIcon = outfit.icon;

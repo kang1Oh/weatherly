@@ -1,22 +1,8 @@
-import { Sun, Cloud, CloudRain, Wind } from 'lucide-react';
+import { Sun, Cloud, CloudRain } from 'lucide-react';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 
-interface DailyForecast {
-  day: string;
-  date: string;
-  temperature: { high: number; low: number };
-  condition: string;
-  precipitation: number;
-  windSpeed: number;
-}
-
-interface WeeklyForecastProps {
-  forecast: DailyForecast[];
-  mode: 'outfit' | 'activity' | 'both';
-}
-
-const getWeatherIcon = (condition: string) => {
+const getWeatherIcon = (condition) => {
   const cond = condition.toLowerCase();
   if (cond.includes('sun') || cond.includes('clear')) return Sun;
   if (cond.includes('rain') || cond.includes('storm')) return CloudRain;
@@ -24,7 +10,7 @@ const getWeatherIcon = (condition: string) => {
   return Sun;
 };
 
-const getOutfitSuggestion = (temp: number, condition: string) => {
+const getOutfitSuggestion = (temp, condition) => {
   const isRainy = condition.toLowerCase().includes('rain');
   
   if (temp < 10) return isRainy ? '🧥 Heavy coat + umbrella' : '🧥 Winter coat';
@@ -33,7 +19,7 @@ const getOutfitSuggestion = (temp: number, condition: string) => {
   return isRainy ? '☂️ Light clothes + umbrella' : '🩳 Shorts & t-shirt';
 };
 
-const getActivitySuggestion = (temp: number, condition: string, windSpeed: number) => {
+const getActivitySuggestion = (temp, condition, windSpeed) => {
   const isRainy = condition.toLowerCase().includes('rain');
   const isWindy = windSpeed > 20;
   
@@ -44,7 +30,7 @@ const getActivitySuggestion = (temp: number, condition: string, windSpeed: numbe
   return '🏊 Swimming or beach';
 };
 
-export function WeeklyForecast({ forecast, mode }: WeeklyForecastProps) {
+export function WeeklyForecast({ forecast, mode }) {
   return (
     <Card className="p-6">
       <h3 className="text-xl font-semibold mb-4">7-Day Forecast</h3>
@@ -55,7 +41,10 @@ export function WeeklyForecast({ forecast, mode }: WeeklyForecastProps) {
           const avgTemp = Math.round((day.temperature.high + day.temperature.low) / 2);
           
           return (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors">
+            <div
+              key={index}
+              className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
+            >
               <div className="flex items-center space-x-4 flex-1">
                 <div className="text-center min-w-16">
                   <div className="font-medium">{day.day}</div>
