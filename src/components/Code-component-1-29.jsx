@@ -8,16 +8,17 @@ import { Badge } from "./ui/badge";
 // API Services
 import { geocodeCity } from "../services/geocodingService";
 
-interface CitySearchProps {
-  onCitySelect: (city: string, country: string, lat?: number, lon?: number) => void;
-  favoriteCities: string[];
-  onToggleFavorite: (cityCountry: string) => void;
-}
+/**
+ * @typedef {Object} CitySearchProps
+ * @property {(city: string, country: string, lat?: number, lon?: number) => void} onCitySelect
+ * @property {string[]} favoriteCities
+ * @property {(cityCountry: string) => void} onToggleFavorite
+ */
 
-export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: CitySearchProps) {
+export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestions, setSuggestions] = useState([] as any[]);
+  const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Fetch city suggestions as user types
@@ -43,7 +44,7 @@ export function CitySearch({ onCitySelect, favoriteCities, onToggleFavorite }: C
     return () => clearTimeout(timeout);
   }, [searchTerm]);
 
-  const handleCitySelect = (city: string, country: string, lat?: number, lon?: number) => {
+  const handleCitySelect = (city, country, lat, lon) => {
     onCitySelect(city, country, lat, lon);
     setSearchTerm("");
     setShowSuggestions(false);
