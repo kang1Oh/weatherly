@@ -1,154 +1,312 @@
-import { Sun, Shield, Wind, Thermometer } from 'lucide-react';
-import { Card } from './ui/card';
-import { Progress } from './ui/progress';
+import React from 'react';
+import { 
+  Sun, Shield, Droplets, Wind, Thermometer, Heart, Eye, Zap,
+  AlertTriangle, CheckCircle, Activity, Umbrella, Shirt, 
+  TrendingUp, TrendingDown, Minus
+} from 'lucide-react';
 import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
 
 const getUVIndex = (condition, temperature) => {
   const isSunny = condition.toLowerCase().includes('sun') || condition.toLowerCase().includes('clear');
-  if (!isSunny) return { level: 2, description: 'Low' };
-  if (temperature > 25) return { level: 8, description: 'Very High' };
-  if (temperature > 20) return { level: 6, description: 'High' };
-  return { level: 4, description: 'Moderate' };
+  if (!isSunny) return { level: 1, description: 'Minimal' };
+  if (temperature > 30) return { level: 9, description: 'Very High' };
+  if (temperature > 25) return { level: 7, description: 'High' };
+  if (temperature > 20) return { level: 5, description: 'Moderate' };
+  return { level: 3, description: 'Low' };
 };
 
-const getComfortIndex = (temperature, humidity) => {
-  let score = 50;
+const getComfortIndex = (temperature, humidity, windSpeed) => {
+  let score = 0;
+  if (temperature >= 18 && temperature <= 24) score += 40;
+  else if (temperature >= 15 && temperature <= 27) score += 30;
+  else if (temperature >= 10 && temperature <= 32) score += 20;
+  else if (temperature >= 5 && temperature <= 35) score += 10;
 
-  if (temperature >= 20 && temperature <= 25) score += 30;
-  else if (temperature >= 15 && temperature <= 30) score += 15;
-  else if (temperature >= 10 && temperature <= 35) score += 5;
-  else score -= 20;
+  if (humidity >= 40 && humidity <= 60) score += 30;
+  else if (humidity >= 30 && humidity <= 70) score += 20;
+  else if (humidity >= 20 && humidity <= 80) score += 10;
 
-  if (humidity >= 40 && humidity <= 60) score += 20;
-  else if (humidity >= 30 && humidity <= 70) score += 10;
-  else score -= 15;
+  if (windSpeed >= 5 && windSpeed <= 15) score += 30;
+  else if (windSpeed >= 2 && windSpeed <= 25) score += 20;
+  else if (windSpeed <= 35) score += 10;
 
   return Math.max(0, Math.min(100, score));
 };
 
-const getAirQualityEstimate = (
-  condition,
-  windSpeed,
-  humidity,
-  temperature
-) => {
-  const cond = condition.toLowerCase();
-
-  let aqi = 55;
-  let description = 'Moderate';
-  let color = 'text-yellow-600';
-
-  if (cond.includes('rain')) {
-    aqi = 25;
-    description = 'Good';
-    color = 'text-green-600';
-  } else if (windSpeed > 15) {
-    aqi = 35;
-    description = 'Good';
-    color = 'text-green-600';
-  } else if (humidity > 80 && (cond.includes('cloud') || cond.includes('fog'))) {
-    aqi = 75;
-    description = 'Unhealthy for Sensitive Groups';
-    color = 'text-orange-600';
-  } else if (temperature > 32 && windSpeed < 5) {
-    aqi = 95;
-    description = 'Unhealthy';
-    color = 'text-red-600';
-  }
-
-  return { aqi, description, color };
+const getAirQualityIndex = (condition, windSpeed, humidity) => {
+  const isRainy = condition.toLowerCase().includes('rain');
+  const isWindy = windSpeed > 15;
+  const isHumid = humidity > 70;
+  
+  let aqi = 50;
+  if (isRainy) aqi -= 25;
+  if (isWindy) aqi -= 15;
+  if (isHumid) aqi += 10;
+  
+  aqi = Math.max(10, Math.min(100, aqi));
+  
+  if (aqi <= 25) return { value: aqi, description: 'Excellent', status: 'excellent' };
+  if (aqi <= 50) return { value: aqi, description: 'Good', status: 'good' };
+  if (aqi <= 75) return { value: aqi, description: 'Moderate', status: 'moderate' };
+  return { value: aqi, description: 'Poor', status: 'poor' };
 };
 
-const getHealthTips = (temperature, humidity, condition) => {
+const getHydrationIndex = (temperature, humidity, condition) => {
+  let needs = 50;
+  if (temperature > 25) needs += 30;
+  else if (temperature > 20) needs += 15;
+  else if (temperature < 10) needs -= 10;
+
+  if (humidity < 30) needs += 20;
+  else if (humidity > 70) needs += 10;
+
+  if (condition.toLowerCase().includes('sun')) needs += 15;
+
+  return Math.max(20, Math.min(100, needs));
+};
+
+const getSkinProtectionIndex = (temperature, condition, humidity) => {
+  let protection = 30;
+  const isSunny = condition.toLowerCase().includes('sun') || condition.toLowerCase().includes('clear');
+  if (isSunny) {
+    protection += 40;
+    if (temperature > 25) protection += 20;
+    if (temperature > 30) protection += 10;
+  }
+  if (humidity < 40) protection += 15;
+  if (temperature < 5) protection += 25;
+  return Math.max(10, Math.min(100, protection));
+};
+
+const getHealthMetrics = (temperature, humidity, windSpeed, condition) => {
+  const comfort = getComfortIndex(temperature, humidity, windSpeed);
+  const airQuality = getAirQualityIndex(condition, windSpeed, humidity);
+  const hydration = getHydrationIndex(temperature, humidity, condition);
+  const skinProtection = getSkinProtectionIndex(temperature, condition, humidity);
+  const uv = getUVIndex(condition, temperature);
+
+  const getStatus = (value) => {
+    if (value >= 85) return 'excellent';
+    if (value >= 70) return 'good';
+    if (value >= 50) return 'moderate';
+    if (value >= 30) return 'poor';
+    return 'dangerous';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'excellent': return 'text-emerald-400';
+      case 'good': return 'text-blue-400';
+      case 'moderate': return 'text-amber-400';
+      case 'poor': return 'text-orange-400';
+      case 'dangerous': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getComfortTips = (comfort, temperature, humidity) => {
+    if (comfort >= 50) return ['Enjoy the comfortable conditions!'];
+    const tips = [];
+    if (temperature > 25) tips.push('Seek shade or air conditioning');
+    else if (temperature < 15) tips.push('Layer clothing for warmth');
+    else tips.push('Adjust activity level');
+    if (humidity > 70) tips.push('Choose breathable fabrics');
+    else if (humidity < 30) tips.push('Use moisturizer');
+    return tips;
+  };
+
+  const getSkinTips = (skinProtection, temperature) => {
+    if (skinProtection >= 70) {
+      return [
+        'Apply SPF 30+ sunscreen',
+        'Wear protective clothing',
+        'Seek shade during peak hours'
+      ];
+    } else if (temperature < 5) {
+      return [
+        'Protect from wind and cold',
+        'Use moisturizing cream'
+      ];
+    } else {
+      return ['Basic sun protection recommended'];
+    }
+  };
+
+  return [
+    {
+      label: 'Overall Comfort',
+      value: comfort,
+      description: comfort >= 80 ? 'Excellent conditions' : comfort >= 60 ? 'Comfortable' : comfort >= 40 ? 'Acceptable' : 'Uncomfortable',
+      status: getStatus(comfort),
+      icon: Heart,
+      color: getStatusColor(getStatus(comfort)),
+      tips: getComfortTips(comfort, temperature, humidity)
+    },
+    {
+      label: 'Air Quality',
+      value: 100 - airQuality.value,
+      description: airQuality.description,
+      status: airQuality.status,
+      icon: Wind,
+      color: getStatusColor(airQuality.status),
+      tips: airQuality.status === 'poor'
+        ? ['Limit outdoor exercise', 'Consider wearing a mask', 'Stay hydrated']
+        : ['Great air quality for outdoor activities']
+    },
+    {
+      label: 'Hydration Needs',
+      value: hydration,
+      description: hydration >= 80 ? 'High fluid needs' : hydration >= 60 ? 'Moderate fluid needs' : hydration >= 40 ? 'Normal fluid needs' : 'Low fluid needs',
+      status: hydration >= 70 ? 'poor' : hydration >= 50 ? 'moderate' : 'good',
+      icon: Droplets,
+      color: hydration >= 70 ? 'text-red-400' : hydration >= 50 ? 'text-amber-400' : 'text-blue-400',
+      tips: hydration >= 70
+        ? ['Drink water every 15-30 minutes', 'Avoid alcohol and caffeine', 'Choose water-rich foods']
+        : ['Maintain regular hydration']
+    },
+    {
+      label: 'Skin Protection',
+      value: skinProtection,
+      description: skinProtection >= 80 ? 'High protection needed' : skinProtection >= 60 ? 'Moderate protection' : skinProtection >= 40 ? 'Basic protection' : 'Minimal protection',
+      status: skinProtection >= 70 ? 'poor' : skinProtection >= 50 ? 'moderate' : 'good',
+      icon: Shield,
+      color: skinProtection >= 70 ? 'text-red-400' : skinProtection >= 50 ? 'text-amber-400' : 'text-emerald-400',
+      tips: getSkinTips(skinProtection, temperature)
+    }
+  ];
+};
+
+const getHealthTips = (temperature, humidity, condition, windSpeed) => {
   const tips = [];
   const isSunny = condition.toLowerCase().includes('sun');
   const isRainy = condition.toLowerCase().includes('rain');
-
-  if (isSunny && temperature > 25) {
-    tips.push('Apply sunscreen SPF 30+');
-    tips.push('Stay hydrated - drink water regularly');
+  const isWindy = windSpeed > 20;
+  
+  if (temperature > 30) {
+    tips.push({ icon: AlertTriangle, type: 'warning', message: 'Heat warning: Avoid strenuous outdoor activities between 10AM-4PM' });
+  } else if (temperature > 25 && isSunny) {
+    tips.push({ icon: Sun, type: 'caution', message: 'High UV exposure: Apply sunscreen and stay hydrated' });
   }
-  if (temperature > 30) tips.push('Avoid outdoor activities during peak hours (10AM-4PM)');
-  if (temperature < 10) {
-    tips.push('Keep extremities warm');
-    tips.push('Layer clothing for better insulation');
+  if (temperature < 5) {
+    tips.push({ icon: Shirt, type: 'info', message: 'Dress in layers and protect extremities from cold' });
   }
-  if (humidity > 70) tips.push('Choose breathable, moisture-wicking fabrics');
-  if (isRainy) tips.push('Stay dry to avoid catching cold');
-
+  if (humidity > 75) {
+    tips.push({ icon: Droplets, type: 'info', message: 'High humidity: Choose moisture-wicking, breathable fabrics' });
+  } else if (humidity < 30) {
+    tips.push({ icon: Eye, type: 'info', message: 'Low humidity: Stay hydrated and use moisturizer' });
+  }
+  if (isRainy) {
+    tips.push({ icon: Umbrella, type: 'info', message: 'Stay dry to maintain body temperature and avoid illness' });
+  }
+  if (isWindy) {
+    tips.push({ icon: Wind, type: 'caution', message: 'Windy conditions: Secure loose items and be cautious outdoors' });
+  }
   return tips;
 };
 
+const StatusIndicator = ({ status }) => {
+  const getIcon = () => {
+    switch (status) {
+      case 'excellent': return CheckCircle;
+      case 'good': return TrendingUp;
+      case 'moderate': return Minus;
+      case 'poor': return TrendingDown;
+      case 'dangerous': return AlertTriangle;
+      default: return Minus;
+    }
+  };
+  const Icon = getIcon();
+  return <Icon className="w-4 h-4" />;
+};
+
 export function HealthIndex({ temperature, humidity, windSpeed, condition }) {
+  const healthMetrics = getHealthMetrics(temperature, humidity, windSpeed, condition);
+  const healthTips = getHealthTips(temperature, humidity, condition, windSpeed);
   const uvIndex = getUVIndex(condition, temperature);
-  const comfortIndex = getComfortIndex(temperature, humidity);
-  const airQuality = getAirQualityEstimate(condition, windSpeed, humidity, temperature);
-  const healthTips = getHealthTips(temperature, humidity, condition);
 
   return (
-    <Card className="p-6">
-      <h3 className="text-xl font-semibold mb-4">Health & Comfort</h3>
-
-      <div className="space-y-6">
-        {/* Comfort Index */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Thermometer className="w-4 h-4 text-blue-500" />
-              <span className="font-medium">Comfort Index</span>
-            </div>
-            <span className="text-sm font-medium">{comfortIndex}%</span>
-          </div>
-          <Progress value={comfortIndex} className="h-2" />
-          <p className="text-xs text-muted-foreground">Based on temperature and humidity levels</p>
+    <div className="p-6 bg-white/25 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 dark:bg-black/20 dark:border-white/20">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white drop-shadow-md">
+          <Activity className="w-5 h-5" />
         </div>
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 drop-shadow-md">Health & Comfort</h3>
+          <p className="text-sm text-gray-700 dark:text-gray-300 drop-shadow-sm">Your wellbeing at {temperature}°C</p>
+        </div>
+      </div>
 
-        {/* UV Index */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Sun className="w-4 h-4 text-orange-500" />
-              <span className="font-medium">UV Index</span>
-            </div>
-            <Badge variant={uvIndex.level > 6 ? 'destructive' : uvIndex.level > 3 ? 'default' : 'secondary'}>
-              {uvIndex.level} - {uvIndex.description}
+      {uvIndex.level >= 6 && (
+        <div className="mb-4 p-3 bg-gradient-to-r from-amber-500/20 to-red-500/20 rounded-xl border border-amber-300/30 backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <Sun className="w-4 h-4 text-amber-400" />
+            <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">High UV Alert</span>
+            <Badge className="bg-red-500/20 text-red-700 dark:text-red-300 border-red-300/30 text-xs">
+              Level {uvIndex.level}
             </Badge>
           </div>
-          <Progress value={(uvIndex.level / 10) * 100} className="h-2" />
+          <p className="text-xs text-gray-800 dark:text-gray-200">
+            {uvIndex.level >= 8 ? 'Extreme UV levels - minimize sun exposure' : 'High UV levels - protection essential'}
+          </p>
         </div>
+      )}
 
-        {/* Air Quality */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Wind className="w-4 h-4 text-green-500" />
-              <span className="font-medium">Air Quality Estimate</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        {healthMetrics.map((metric, index) => (
+          <div key={index} className="p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <metric.icon className={`w-4 h-4 ${metric.color}`} />
+                <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{metric.label}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <StatusIndicator status={metric.status} />
+                <span className="text-xs text-gray-700 dark:text-gray-300">{metric.value}%</span>
+              </div>
             </div>
-            <span className={`text-sm font-medium ${airQuality.color}`}>
-              AQI {airQuality.aqi} - {airQuality.description}
-            </span>
-          </div>
-          <Progress value={100 - airQuality.aqi} className="h-2" />
-        </div>
-
-        {/* Health Tips */}
-        {healthTips.length > 0 && (
-          <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <Shield className="w-4 h-4 text-blue-500" />
-              <span className="font-medium">Health Tips</span>
+            <Progress value={metric.value} className="mb-2 h-2" />
+            <div className="mb-3">
+              <p className="text-xs text-gray-800 dark:text-gray-200 mb-1">{metric.description}</p>
             </div>
             <div className="space-y-1">
-              {healthTips.map((tip, index) => (
-                <div key={index} className="text-sm text-muted-foreground flex items-start space-x-2">
-                  <span className="text-blue-500 mt-1">•</span>
-                  <span>{tip}</span>
+              {metric.tips.slice(0, 2).map((tip, tipIndex) => (
+                <div key={tipIndex} className="flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300">
+                  <span className="text-cyan-400 mt-0.5">•</span>
+                  <span className="leading-relaxed">{tip}</span>
                 </div>
               ))}
             </div>
           </div>
-        )}
+        ))}
       </div>
-    </Card>
+
+      {healthTips.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100">Health Tips</h4>
+          </div>
+          <div className="space-y-2">
+            {healthTips.map((tip, index) => {
+              const IconComponent = tip.icon;
+              const typeColors = {
+                warning: 'bg-red-500/20 border-red-300/30 text-red-800 dark:text-red-200',
+                caution: 'bg-amber-500/20 border-amber-300/30 text-amber-800 dark:text-amber-200',
+                info: 'bg-blue-500/20 border-blue-300/30 text-blue-800 dark:text-blue-200'
+              };
+              return (
+                <div key={index} className={`p-3 rounded-lg border backdrop-blur-sm ${typeColors[tip.type]}`}>
+                  <div className="flex items-start gap-2">
+                    <IconComponent className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm leading-relaxed">{tip.message}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

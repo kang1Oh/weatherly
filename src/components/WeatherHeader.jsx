@@ -1,5 +1,4 @@
 import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer } from 'lucide-react';
-import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 const weatherBackgrounds = {
@@ -28,52 +27,52 @@ export function WeatherHeader({ weather }) {
   const backgroundImage = getBackgroundImage(weather.condition);
 
   return (
-    <Card className="relative overflow-hidden border-0 rounded-3xl h-80">
+    <div className="relative overflow-hidden rounded-3xl h-80 bg-white/20 backdrop-blur-xl border border-white/30 shadow-xl">
       <div className="absolute inset-0">
         <ImageWithFallback
           src={backgroundImage}
           alt="Weather background"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover opacity-100"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-blue-500/20 to-emerald-500/30" />
       </div>
       
       <div className="relative z-10 p-8 h-full flex flex-col justify-between text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-semibold">{weather.city}</h1>
-            <p className="text-white/80">{weather.country}</p>
+            <h1 className="text-3xl font-semibold drop-shadow-lg">{weather.city}</h1>
+            <p className="text-white/90 drop-shadow-md">{weather.country}</p>
           </div>
-          <WeatherIcon className="w-12 h-12" />
+          <WeatherIcon className="w-12 h-12 drop-shadow-lg" />
         </div>
         
-        <div className="space-y-4">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-6xl font-light">{weather.temperature}°</span>
-            <span className="text-xl text-white/80">C</span>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-6xl font-light drop-shadow-lg">{weather.temperature}°</span>
+            <span className="text-xl text-white/90 drop-shadow-md">C</span>
           </div>
           
           <div>
-            <p className="text-xl">{weather.condition}</p>
-            <p className="text-white/80">{weather.description}</p>
+            <p className="text-xl drop-shadow-md">{weather.condition}</p>
+            <p className="text-white/90 drop-shadow-sm">{weather.description}</p>
           </div>
           
-          <div className="flex space-x-6 text-sm">
-            <div className="flex items-center space-x-1">
-              <Thermometer className="w-4 h-4" />
-              <span>Feels like {weather.feelsLike}°</span>
+          <div className="flex gap-6 text-sm">
+            <div className="flex items-center gap-1">
+              <Thermometer className="w-4 h-4 drop-shadow-sm" />
+              <span className="drop-shadow-sm">Feels like {weather.feelsLike}°</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Droplets className="w-4 h-4" />
-              <span>{weather.humidity}%</span>
+            <div className="flex items-center gap-1">
+              <Droplets className="w-4 h-4 drop-shadow-sm" />
+              <span className="drop-shadow-sm">{weather.humidity}%</span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Wind className="w-4 h-4" />
-              <span>{weather.windSpeed} km/h</span>
+            <div className="flex items-center gap-1">
+              <Wind className="w-4 h-4 drop-shadow-sm" />
+              <span className="drop-shadow-sm">{weather.windSpeed} km/h</span>
             </div>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

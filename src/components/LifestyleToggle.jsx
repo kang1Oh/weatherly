@@ -1,38 +1,43 @@
 import { Shirt, Activity, MoreHorizontal } from 'lucide-react';
-import { Button } from './ui/button';
 
 export function LifestyleToggle({ mode, onModeChange }) {
   return (
-    <div className="flex items-center space-x-2 bg-muted p-1 rounded-lg">
-      <Button
-        variant={mode === 'outfit' ? 'default' : 'ghost'}
-        size="sm"
+    <div className="flex items-center gap-1 bg-white/25 backdrop-blur-xl border border-white/30 p-1 rounded-2xl shadow-lg dark:bg-black/20 dark:border-white/20">
+      <button
+        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+          mode === 'outfit'
+            ? 'bg-gradient-to-r from-[#1299ca] to-[#35bcde] text-white shadow-md scale-105'
+            : 'text-gray-700 hover:bg-white/30 hover:scale-105 dark:text-gray-300 dark:hover:bg-white/10'
+        }`}
         onClick={() => onModeChange('outfit')}
-        className="flex items-center space-x-2"
       >
         <Shirt className="w-4 h-4" />
         <span>Outfits</span>
-      </Button>
+      </button>
       
-      <Button
-        variant={mode === 'activity' ? 'default' : 'ghost'}
-        size="sm"
+      <button
+        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+          mode === 'activity'
+            ? 'bg-gradient-to-r from-[#35bcde] to-[#6fd7ec] text-white shadow-md scale-105'
+            : 'text-gray-700 hover:bg-white/30 hover:scale-105 dark:text-gray-300 dark:hover:bg-white/10'
+        }`}
         onClick={() => onModeChange('activity')}
-        className="flex items-center space-x-2"
       >
         <Activity className="w-4 h-4" />
         <span>Activities</span>
-      </Button>
+      </button>
       
-      <Button
-        variant={mode === 'both' ? 'default' : 'ghost'}
-        size="sm"
+      <button
+        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+          mode === 'both'
+            ? 'bg-gradient-to-r from-[#6fd7ec] to-[#9ceff2] text-gray-800 shadow-md scale-105'
+            : 'text-gray-700 hover:bg-white/30 hover:scale-105 dark:text-gray-300 dark:hover:bg-white/10'
+        }`}
         onClick={() => onModeChange('both')}
-        className="flex items-center space-x-2"
       >
         <MoreHorizontal className="w-4 h-4" />
         <span>Both</span>
-      </Button>
+      </button>
     </div>
   );
 }
