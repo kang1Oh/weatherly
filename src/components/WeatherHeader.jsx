@@ -2,9 +2,9 @@ import { Cloud, Sun, CloudRain, Wind, Droplets, Thermometer } from 'lucide-react
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 const weatherBackgrounds = {
-  sunny: "https://images.unsplash.com/photo-1553775556-a5b1a88abb54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMHdlYXRoZXIlMjBiYWNrZ3JvdW5kJTIwZ3JhZGllbnQlMjBza3l8ZW58MXx8fHwxNzU3NDY2NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  rainy: "https://images.unsplash.com/photo-1599806112354-67f8b5425a06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyYWlueSUyMHdlYXRoZXIlMjBjbG91ZHMlMjBkYXJrJTIwc2t5fGVufDF8fHx8MTc1NzQ2NjQ4Mnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  cloudy: "https://images.unsplash.com/photo-1553775556-a5b1a88abb54?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5ueSUyMHdlYXRoZXIlMjBiYWNrZ3JvdW5kJTIwZ3JhZGllbnQlMjBza3l8ZW58MXx8fHwxNzU3NDY2NDc5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+  sunny: "https://images.unsplash.com/photo-1491929007750-dce8ba76e610?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2067",
+  rainy: "https://images.unsplash.com/photo-1507027682794-35e6c12ad5b4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1974",
+  cloudy: "https://images.unsplash.com/photo-1692541184196-88b71a2a06d5?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1974"
 };
 
 const getWeatherIcon = (condition) => {
@@ -34,7 +34,7 @@ export function WeatherHeader({ weather }) {
           alt="Weather background"
           className="w-full h-full object-cover opacity-100"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-blue-500/20 to-emerald-500/30" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-blue-500/20 to-white-500/30" />
       </div>
       
       <div className="relative z-10 p-8 h-full flex flex-col justify-between text-white">

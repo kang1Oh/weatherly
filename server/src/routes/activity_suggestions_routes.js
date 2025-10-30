@@ -11,15 +11,51 @@ function requireAdmin(req, res, next) {
 }
 
 // submit suggestion (public)
-router.post('/', async (req, res) => {
-  const { name, email, activity, indoor, location, city, country } = req.body;
-  if (!activity || !location) return res.status(400).json({ error: 'activity and location required' });
+router.post("/", async (req, res) => {
+  try {
+    const {
+      name,
+      activity,
+      reason,
+      duration,
+      energyLevel,
+      timeOfDay,
+      category,
+      indoor,
+      condition,
+      tempGroup,
+      status,
+    } = req.body;
 
-  const result = await db.query(
-    `INSERT INTO suggestions (name,activity,indoor,location,city,country) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [name, email, activity, indoor, location, city, country]
-  );
-  res.status(201).json(result.rows[0]);
+    if (!activity) {
+      return res.status(400).json({ error: "Activity name is required." });
+    }
+
+    const result = await db.query(
+      `INSERT INTO suggestions 
+        (name, activity, reason, duration, "energyLevel", "timeOfDay", category, indoor, condition, "tempGroup", status) 
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING *`,
+      [
+        name || "Anonymous",
+        activity,
+        reason || null,
+        duration || null,
+        energyLevel || "Any",
+        timeOfDay || "Any",
+        category || "Relaxation",
+        indoor === true || indoor === "true",
+        condition || "any",
+        tempGroup || "any",
+        status || "inactive",
+      ]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("❌ Error inserting suggestion:", err);
+    res.status(500).json({ error: "Failed to submit suggestion." });
+  }
 });
 
 // admin: list suggestions
@@ -28,9 +64,23 @@ router.get('/', requireAdmin, async (req, res) => {
   res.json(result.rows);
 });
 
+// public: get all approved activity suggestions
+router.get('/public', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM suggestions WHERE status = $1 ORDER BY created_at DESC',
+      ['active']
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching public activity suggestions:', err);
+    res.status(500).json({ error: 'Failed to fetch suggestions' });
+  }
+});
+
 // admin: moderate (approve/reject)
 router.put('/:id/status', requireAdmin, async (req, res) => {
-  const { status } = req.body; // 'approved' or 'rejected'
+  const { status } = req.body; // 'active' or 'deactive'
   const id = req.params.id;
   const result = await db.query('UPDATE suggestions SET status=$1 WHERE suggestion_id=$2 RETURNING *', [status, id]);
   res.json(result.rows[0]);

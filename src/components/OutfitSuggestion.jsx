@@ -1,145 +1,113 @@
-// Local image imports
-import bootsImg from '../assets/outfits/boots.png';
-import cardiganImg from '../assets/outfits/cardigan.png';
-import hatImg from '../assets/outfits/hat.png';
-import jacketImg from '../assets/outfits/jacket.png';
-import jeansImg from '../assets/outfits/jeans.png';
-import lightSweaterImg from '../assets/outfits/light-sweater.png';
-import longSleeveImg from '../assets/outfits/long-sleeve.png';
-import raincoatImg from '../assets/outfits/raincoat.png';
-import sandalsImg from '../assets/outfits/sandals.png';
-import shoesImg from '../assets/outfits/shoes.png';
-import shortsImg from '../assets/outfits/shorts.png';
-import sunglassesImg from '../assets/outfits/sunglasses.png';
-import sunscreenImg from '../assets/outfits/sunscreen.png';
-import thermalUnderwearImg from '../assets/outfits/thermal-underwear.png';
-import tshirtImg from '../assets/outfits/tshirt.png';
-import umbrellaImg from '../assets/outfits/umbrella.jpg';
-import winterCoatImg from '../assets/outfits/winter-coat.png';
-
-import { Shirt, Shield, Umbrella, Sun, Snowflake } from 'lucide-react';
+import { Shirt, Shield, Sun, Snowflake } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { useEffect, useState } from 'react';
+import { fetchOutfitImages } from '../services/outfitImageService';
 
-// Image mapping for different clothing items
-const imageMap = {
-  // clothes
-  jeans: jeansImg,
-  pants: jeansImg,
+function useOutfitSuggestion(temp, condition, humidity) {
+  const [images, setImages] = useState([]);
 
-  jacket: jacketImg,
-  raincoat: raincoatImg,
+  useEffect(() => {
+    fetchOutfitImages().then(setImages);
+  }, []);
 
-  coat: winterCoatImg,
-  'winter coat': winterCoatImg,
-  'heavy winter coat': winterCoatImg,
+  const getImageForItem = (itemName) => {
+    const lower = itemName.toLowerCase();
+    const match = images.find(
+      (img) =>
+        img.item_name?.toLowerCase() === lower ||
+        img.tags?.some((tag) => tag.toLowerCase().includes(lower))
+    );
+    return match ? match.url : '/outfits/fallback.png';
+  };
 
-  sweater: lightSweaterImg,
-  cardigan: cardiganImg,
-  'light sweater': lightSweaterImg,
+  // --- Helpers ---
+  const getCategoryByTemp = (t) => {
+    if (t < 5) return 'cold';
+    if (t < 15) return 'cold';
+    if (t < 25) return 'warm';
+    return 'hot';
+  };
 
-  tshirt: tshirtImg,
-  't-shirt': tshirtImg,
-  't shirt': tshirtImg,
+  const getRandomItems = (arr, count) => {
+    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  };
 
-  'long-sleeve': longSleeveImg,
-  'long sleeve': longSleeveImg,
-
-  shorts: shortsImg,
-
-  boots: bootsImg,
-  'winter boots': bootsImg,
-
-  sandals: sandalsImg,
-  shoes: shoesImg,
-  sneakers: shoesImg,
-  'closed shoes': shoesImg,
-
-  // accessories
-  umbrella: umbrellaImg,
-  sunglasses: sunglassesImg,
-  hat: hatImg,
-  sunscreen: sunscreenImg,
-
-  // special
-  'thermal underwear': thermalUnderwearImg,
-};
-
-// Function to get image for clothing item
-const getImageForItem = (itemName) => {
-  const lowerName = itemName.toLowerCase();
-
-  if (imageMap[lowerName]) {
-    return imageMap[lowerName];
-  }
-
-  for (const [key, value] of Object.entries(imageMap)) {
-    if (lowerName.includes(key) || key.includes(lowerName)) {
-      return value;
-    }
-  }
-
-  return imageMap.tshirt;
-};
-
-const getOutfitSuggestion = (temp, condition, humidity) => {
-  const isRainy = condition.toLowerCase().includes('rain') || condition.toLowerCase().includes('storm');
+  // --- Weather logic ---
+  const isRainy =
+    condition.toLowerCase().includes('rain') ||
+    condition.toLowerCase().includes('storm');
   const isWindy = condition.toLowerCase().includes('wind');
 
   let outfit = {
     clothes: [],
     accessories: [],
     icon: Shirt,
-    color: '#3b82f6'
+    color: '#3b82f6',
   };
 
+  const category = getCategoryByTemp(temp);
+  const categoryItems = images.filter((img) => img.category === category);
+  const randomCount = Math.floor(Math.random() * 3) + 3; // 3–5 items
+
+  outfit.clothes = getRandomItems(categoryItems, randomCount).map((img) => ({
+    name: img.item_name,
+    image: img.url,
+  }));
+
+  // assign icon/color per temp range
   if (temp < 5) {
-    const items = ['Heavy winter coat', 'Warm sweater', 'Thick jeans', 'Winter boots', 'Thermal underwear'];
-    outfit.clothes = items.map(name => ({ name, image: getImageForItem(name) }));
     outfit.icon = Snowflake;
     outfit.color = '#2563eb';
   } else if (temp < 15) {
-    const items = ['Jacket or light coat', 'Long-sleeve shirt', 'Jeans or pants', 'Closed shoes'];
-    outfit.clothes = items.map(name => ({ name, image: getImageForItem(name) }));
     outfit.icon = Shield;
     outfit.color = '#3b82f6';
   } else if (temp < 25) {
-    const items = ['Light sweater or cardigan', 'T-shirt', 'Jeans or casual pants', 'Sneakers'];
-    outfit.clothes = items.map(name => ({ name, image: getImageForItem(name) }));
     outfit.icon = Shirt;
     outfit.color = '#10b981';
   } else {
-    const items = ['Light t-shirt or tank top', 'Shorts or light pants', 'Sandals or breathable shoes'];
-    outfit.clothes = items.map(name => ({ name, image: getImageForItem(name) }));
     outfit.icon = Sun;
     outfit.color = '#f59e0b';
   }
 
+  // --- Accessories ---
   if (isRainy) {
-    outfit.accessories.push(
-      { name: 'Umbrella', image: getImageForItem('Umbrella') },
-      { name: 'Waterproof jacket', image: getImageForItem('raincoat') },
-      { name: 'Water-resistant shoes', image: getImageForItem('boots') }
-    );
+    const rainyItems = images
+      .filter((img) => img.category === 'rainy')
+      .map((img) => ({
+        name: img.item_name,
+        image: img.url,
+      }));
+    outfit.accessories.push(...getRandomItems(rainyItems, 3));
   }
 
   if (temp > 25 && condition.toLowerCase().includes('sun')) {
-    outfit.accessories.push(
-      { name: 'Sunglasses', image: getImageForItem('Sunglasses') },
-      { name: 'Hat', image: getImageForItem('Hat') },
-      { name: 'Sunscreen', image: getImageForItem('Sunscreen') }
-    );
+    const hotItems = images
+      .filter((img) => img.category === 'hot')
+      .map((img) => ({
+        name: img.item_name,
+        image: img.url,
+      }));
+    outfit.accessories.push(...getRandomItems(hotItems, 3));
   }
 
   if (humidity > 70) {
-    outfit.accessories.push({ name: 'Light, breathable fabrics', image: getImageForItem('t-shirt') });
+    outfit.accessories.push({
+      name: 'Light, breathable fabrics',
+      image: getImageForItem('T-shirt'),
+    });
   }
 
   if (isWindy) {
-    outfit.accessories.push({ name: 'Light jacket (for wind protection)', image: getImageForItem('jacket') });
+    outfit.accessories.push({
+      name: 'Light jacket',
+      image: getImageForItem('Jacket'),
+    });
   }
 
+  outfit.accessories = outfit.accessories.slice(0, 3);
   return outfit;
-};
+}
 
 const getMotivationalQuote = (condition) => {
   const cond = condition.toLowerCase();
@@ -156,14 +124,12 @@ const getMotivationalQuote = (condition) => {
 };
 
 export function OutfitSuggestion({ temperature, condition, humidity }) {
-  const outfit = getOutfitSuggestion(temperature, condition, humidity);
+  const outfit = useOutfitSuggestion(temperature, condition, humidity);
   const quote = getMotivationalQuote(condition);
   const OutfitIcon = outfit.icon;
 
   return (
     <div className="p-6 bg-white/25 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 dark:bg-black/20 dark:border-white/20">
-      
-      {/* Section Title */}
       <div className="flex items-center gap-3 mb-4">
         <div
           className="p-2 rounded-full text-white"
@@ -175,14 +141,12 @@ export function OutfitSuggestion({ temperature, condition, humidity }) {
           <h3 className="text-xl font-semibold text-white drop-shadow-md">
             Perfect Outfit
           </h3>
-          <p className="text-sm text-white/80">
-            Stay comfy at {temperature}°C
-          </p>
+          <p className="text-sm text-white/80">Stay comfy at {temperature}°C</p>
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex flex-col gap-6">
+        {/* Clothing */}
         <div>
           <h4 className="font-medium mb-3 text-white drop-shadow-sm">
             Recommended Clothing:
@@ -242,7 +206,7 @@ export function OutfitSuggestion({ temperature, condition, humidity }) {
           </div>
         )}
 
-        {/* Motivational Quote */}
+        {/* Quote */}
         <div className="pt-2 border-t border-white/20 dark:border-white/10">
           <p className="text-sm text-white italic drop-shadow-sm">{quote}</p>
         </div>

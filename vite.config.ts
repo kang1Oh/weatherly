@@ -54,8 +54,12 @@
       target: 'esnext',
       outDir: 'build',
     },
-    server: {
+    server: { 
       port: 3000,
-      open: true,
-    },
+      proxy: {
+        '/api': 'http://localhost:4000',
+        '/outfits': 'http://localhost:4000'
+      }
+    }
+
   });
