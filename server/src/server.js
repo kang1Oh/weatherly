@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Static file serving (corrected)
+// Static file serving
 app.use('/outfits', express.static(path.join(__dirname, '../public/outfits')));
 app.use(express.static(path.join(__dirname, "public")));
 
