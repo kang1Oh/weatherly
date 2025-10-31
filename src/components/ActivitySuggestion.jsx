@@ -7,6 +7,7 @@ import {
 import { Badge } from './ui/badge';
 import { fetchActivitySuggestions } from '../services/activitySuggestionService';
 import { submitActivitySuggestion } from "../services/activitySuggestionService";
+import { SubmitSuccess } from "./SubmitSuccess";
 
 // Map actual DB categories to Lucide icons
 const iconMap = {
@@ -27,66 +28,26 @@ const iconMap = {
 };
 
 // 💡 Updated: normalized and safe filtering
-const getActivitySuggestions = (temp, condition, windSpeed, allSuggestions = []) => {
-  if (!allSuggestions.length) return { indoor: [], outdoor: [], featured: null };
+const getActivitySuggestions = (condition, windSpeed, allSuggestions = []) => {
+  if (!allSuggestions.length)
+    return { indoor: [], outdoor: [], featured: null };
 
-  // Normalize Open-Meteo condition into DB-friendly categories
-  const normalizeCondition = (cond = "") => {
-    const lc = cond.toLowerCase();
-
-    if (["light drizzle", "light rain", "moderate rain", "heavy rain", "rain showers", "thunderstorm"].some(c => lc.includes(c))) {
-      return "Rain";
-    }
-    if (["snow"].some(c => lc.includes(c))) {
-      return "Snow";
-    }
-    if (["partly cloudy", "mainly clear", "overcast", "fog", "rime fog"].some(c => lc.includes(c))) {
-      return "Partly Cloudy";
-    }
-    if (["clear"].some(c => lc.includes(c))) {
-      return "Clear";
-    }
-    return "Clear"; // fallback
-  };
-
-  const normalizedCondition = normalizeCondition(condition);
-  const isRainy = normalizedCondition === "Rain";
-  const isSnowy = normalizedCondition === "Snow";
-  const isCloudy = normalizedCondition === "Partly Cloudy";
-  const isClear = normalizedCondition === "Clear";
+  const currentCondition = condition?.trim() || "";
   const isWindy = windSpeed > 20;
 
-  // Match to DB condition (already aligned to Open-Meteo styles)
   const matching = allSuggestions.filter(s => {
-    const cond = (s.condition || "").toLowerCase().trim();
-    const normalized = normalizedCondition.toLowerCase().trim();
-    return cond === "any" || cond === normalized;
+    const cond = (s.condition || "").trim();
+    return cond === "any" || cond === currentCondition;
   });
 
-  // Temperature grouping (based on your DB)
-  let tempGroup = "any";
-  if (temp < 5) tempGroup = "<5";
-  else if (temp < 15) tempGroup = "<15";
-  else if (temp < 25) tempGroup = "<25";
-  else tempGroup = ">=25";
+  const indoor = matching.filter(s => s.indoor === true);
+  const outdoor = matching.filter(s => s.indoor === false);
 
-  const filtered = matching.filter(
-    s => s.tempGroup === tempGroup || s.tempGroup === "any"
-  );
-
-  // Indoor/outdoor split
-  const indoor = filtered.filter(s => s.indoor === true);
-  const outdoor = filtered.filter(s => s.indoor === false);
-
-  // Featured pick logic
   let featured = null;
-  if (isRainy || isSnowy || isWindy) {
-    featured = indoor[0] || outdoor[0] || null;
-  } else {
-    featured = outdoor[0] || indoor[0] || null;
-  }
+  if (isWindy) featured = indoor[0] || outdoor[0] || null;
+  else featured = outdoor[0] || indoor[0] || null;
 
-  return { indoor, outdoor, featured, weatherCondition: normalizedCondition, tempGroup };
+  return { indoor, outdoor, featured, weatherCondition: currentCondition };
 };
 
 const getEnergyColor = (level) => {
@@ -109,7 +70,7 @@ const getTimeIcon = (timeOfDay) => {
 
 export function ActivitySuggestion({ temperature, condition, windSpeed }) {
   const [suggestions, setSuggestions] = useState([]);
-  const [showToast, setShowToast] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     async function loadSuggestions() {
@@ -119,7 +80,6 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
           ...s,
           indoor: s.indoor === true || s.indoor === "true",
           condition: s.condition?.trim() || "any",
-          tempGroup: s.tempGroup?.trim() || "any",
         }));
         setSuggestions(normalizedData);
       } catch (err) {
@@ -130,7 +90,7 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
     loadSuggestions();
   }, []);
 
-  const activities = getActivitySuggestions(temperature, condition, windSpeed, suggestions);
+  const activities = getActivitySuggestions(condition, windSpeed, suggestions);
 
   return (
     <div className="p-6 bg-white/25 backdrop-blur-xl rounded-2xl shadow-xl border border-white/30 dark:bg-black/20 dark:border-white/20">
@@ -296,13 +256,11 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
               e.preventDefault();
               const form = e.target;
 
-              // Build duration string
               const duration =
                 form.durationFrom.value && form.durationTo.value
                   ? `${form.durationFrom.value}-${form.durationTo.value} ${form.durationUnit.value}`
                   : null;
 
-              // Construct payload
               const suggestion = {
                 name: form.name.value,
                 activity: form.activity.value,
@@ -313,20 +271,19 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
                 category: form.category.value,
                 indoor: form.indoor.value === "true",
                 condition: form.condition.value,
-                tempGroup: form.tempGroup.value,
                 status: "inactive",
               };
 
               try {
                 await submitActivitySuggestion(suggestion);
-                alert("Thanks for your suggestion! 🌟");
                 form.reset();
+                setShowSuccess(true); // ✅ show toast
               } catch (err) {
                 alert("Oops, something went wrong submitting your suggestion.");
               }
             }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3"
-          >
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
             {/* Name of Submitter */}
             <input
               name="name"
@@ -419,21 +376,12 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
               ))}
             </select>
 
-            {/* Temperature Group */}
-            <select name="tempGroup" className="p-2 rounded-lg border border-gray-300 text-sm text-gray-900 bg-white/80">
-              <option value="" disabled selected>Temperature Range</option>
-                {["any", "<5", "<15", "<25", ">=25"].map((t) => (
-                <option key={t}>{t}</option>
-              ))}
-            </select>
-
-            <div className="col-span-full flex justify-end mt-4">
+            
               {/* Submit Button */}
               <button
                 type="submit"
-                className="py-2 px-4 rounded-lg bg-gradient-to-r from-violet-500 to-purple-600 
+                className="py-2 px-4 rounded-lg bg-gradient-to-r from-cyan-500/30 to-purple-600
                 text-white font-medium 
-                hover:from-violet-600 hover:to-purple-700 
                 transform hover:scale-105 
                 transition-all duration-200 ease-in-out
                 cursor-pointer
@@ -442,12 +390,13 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
               >
                 Submit Suggestion
               </button>
-            </div>
+            
             
           </form>
           
         </div>
       </div>
+      {showSuccess && <SubmitSuccess onClose={() => setShowSuccess(false)} />}
     </div>
   );
 }

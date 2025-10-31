@@ -23,7 +23,6 @@ router.post("/", async (req, res) => {
       category,
       indoor,
       condition,
-      tempGroup,
       status,
     } = req.body;
 
@@ -33,8 +32,8 @@ router.post("/", async (req, res) => {
 
     const result = await db.query(
       `INSERT INTO suggestions 
-        (name, activity, reason, duration, "energyLevel", "timeOfDay", category, indoor, condition, "tempGroup", status) 
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+        (name, activity, reason, duration, "energyLevel", "timeOfDay", category, indoor, condition, status) 
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
        RETURNING *`,
       [
         name || "Anonymous",
@@ -46,7 +45,6 @@ router.post("/", async (req, res) => {
         category || "Relaxation",
         indoor === true || indoor === "true",
         condition || "any",
-        tempGroup || "any",
         status || "inactive",
       ]
     );

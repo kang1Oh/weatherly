@@ -3,29 +3,19 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useEffect, useState } from 'react';
 import { fetchOutfitImages } from '../services/outfitImageService';
 
-function useOutfitSuggestion(temp, condition, humidity) {
+function useOutfitSuggestion(temp) {
   const [images, setImages] = useState([]);
 
   useEffect(() => {
-    fetchOutfitImages().then(setImages);
+    fetchOutfitImages().then((data) => setImages(data || []));
   }, []);
-
-  const getImageForItem = (itemName) => {
-    const lower = itemName.toLowerCase();
-    const match = images.find(
-      (img) =>
-        img.item_name?.toLowerCase() === lower ||
-        img.tags?.some((tag) => tag.toLowerCase().includes(lower))
-    );
-    return match ? match.url : '/outfits/fallback.png';
-  };
 
   // --- Helpers ---
   const getCategoryByTemp = (t) => {
-    if (t < 5) return 'cold';
-    if (t < 15) return 'cold';
-    if (t < 25) return 'warm';
-    return 'hot';
+    if (t < 5) return "cold";
+    if (t < 15) return "cold";
+    if (t < 25) return "warm";
+    return "hot";
   };
 
   const getRandomItems = (arr, count) => {
@@ -33,79 +23,56 @@ function useOutfitSuggestion(temp, condition, humidity) {
     return shuffled.slice(0, count);
   };
 
-  // --- Weather logic ---
-  const isRainy =
-    condition.toLowerCase().includes('rain') ||
-    condition.toLowerCase().includes('storm');
-  const isWindy = condition.toLowerCase().includes('wind');
-
-  let outfit = {
+  // --- Outfit generation ---
+  const outfit = {
     clothes: [],
     accessories: [],
     icon: Shirt,
-    color: '#3b82f6',
+    color: "#3b82f6",
   };
 
+  // Determine category by temp
   const category = getCategoryByTemp(temp);
-  const categoryItems = images.filter((img) => img.category === category);
-  const randomCount = Math.floor(Math.random() * 3) + 3; // 3–5 items
 
-  outfit.clothes = getRandomItems(categoryItems, randomCount).map((img) => ({
+  // Filter by temperature category
+  const categoryClothes = images.filter(
+    (img) => img.category === category && img.type === "clothing"
+  );
+  const categoryAccessories = images.filter(
+    (img) => img.category === category && img.type === "accessory"
+  );
+
+  // Randomly select 3–5 clothing items
+  const randomCount = Math.floor(Math.random() * 3) + 3;
+  outfit.clothes = getRandomItems(categoryClothes, randomCount).map((img) => ({
     name: img.item_name,
     image: img.url,
   }));
 
-  // assign icon/color per temp range
+  // Add 1–2 accessories (prioritize same-category first)
+  const accessoriesPool = [
+    ...categoryAccessories
+  ];
+  outfit.accessories = getRandomItems(accessoriesPool, 2).map((img) => ({
+    name: img.item_name,
+    image: img.url,
+  }));
+
+  // --- Icons + Colors per temp range ---
   if (temp < 5) {
     outfit.icon = Snowflake;
-    outfit.color = '#2563eb';
+    outfit.color = "#2563eb";
   } else if (temp < 15) {
     outfit.icon = Shield;
-    outfit.color = '#3b82f6';
+    outfit.color = "#3b82f6";
   } else if (temp < 25) {
     outfit.icon = Shirt;
-    outfit.color = '#10b981';
+    outfit.color = "#10b981";
   } else {
     outfit.icon = Sun;
-    outfit.color = '#f59e0b';
+    outfit.color = "#f59e0b";
   }
 
-  // --- Accessories ---
-  if (isRainy) {
-    const rainyItems = images
-      .filter((img) => img.category === 'rainy')
-      .map((img) => ({
-        name: img.item_name,
-        image: img.url,
-      }));
-    outfit.accessories.push(...getRandomItems(rainyItems, 3));
-  }
-
-  if (temp > 25 && condition.toLowerCase().includes('sun')) {
-    const hotItems = images
-      .filter((img) => img.category === 'hot')
-      .map((img) => ({
-        name: img.item_name,
-        image: img.url,
-      }));
-    outfit.accessories.push(...getRandomItems(hotItems, 3));
-  }
-
-  if (humidity > 70) {
-    outfit.accessories.push({
-      name: 'Light, breathable fabrics',
-      image: getImageForItem('T-shirt'),
-    });
-  }
-
-  if (isWindy) {
-    outfit.accessories.push({
-      name: 'Light jacket',
-      image: getImageForItem('Jacket'),
-    });
-  }
-
-  outfit.accessories = outfit.accessories.slice(0, 3);
   return outfit;
 }
 
@@ -114,17 +81,17 @@ const getMotivationalQuote = (condition) => {
   if (cond.includes('sun') || cond.includes('clear')) {
     return "Sunny days are perfect for new beginnings! ☀️";
   }
-  if (cond.includes('rain')) {
+  if (cond.includes('rain') || cond.includes('drizzle') || cond.includes('thunderstorm')) {
     return "Let the rain wash away yesterday's worries. 🌧️";
   }
-  if (cond.includes('cloud')) {
+  if (cond.includes('overcast') || cond.includes('cloudy')) {
     return "Every cloud has a silver lining. Stay positive! ☁️";
   }
   return "Make today amazing, regardless of the weather! 🌟";
 };
 
 export function OutfitSuggestion({ temperature, condition, humidity }) {
-  const outfit = useOutfitSuggestion(temperature, condition, humidity);
+  const outfit = useOutfitSuggestion(temperature);
   const quote = getMotivationalQuote(condition);
   const OutfitIcon = outfit.icon;
 
