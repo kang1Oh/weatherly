@@ -147,7 +147,11 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
                       </div>
                       <div className="flex items-center gap-1">
                         {React.createElement(getTimeIcon(activities.featured.timeOfDay), { className: "w-3 h-3" })}
-                        {activities.featured.timeOfDay}
+                        {activities.featured.timeOfDay === "Any" ? "Any time" : activities.featured.timeOfDay}
+                      </div>
+                      <div className="flex items-end gap-1">
+                        <p>- </p>
+                        {activities.featured.name}
                       </div>
                     </div>
                   </div>
@@ -179,12 +183,20 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
                             <h5 className="font-medium text-gray-900 text-sm mb-1 truncate">{activity.activity}</h5>
                             <p className="text-xs text-gray-700 mb-2 leading-relaxed">{activity.reason}</p>
                             <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <TimeIcon className="w-3 h-3" />
+                                {activity.duration}
+                              </div>
                               <Badge className={`text-xs px-2 py-0.5 ${getEnergyColor(activity.energyLevel)}`}>
                                 {activity.energyLevel}
                               </Badge>
                               <div className="flex items-center gap-1 text-xs text-gray-600">
                                 <TimeIcon className="w-3 h-3" />
-                                {activity.timeOfDay}
+                                {activity.timeOfDay === "Any" ? "Any time" : activity.timeOfDay}
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <p>- </p>
+                                {activity.name}
                               </div>
                             </div>
                           </div>
@@ -220,12 +232,20 @@ export function ActivitySuggestion({ temperature, condition, windSpeed }) {
                             <h5 className="font-medium text-gray-900 text-sm mb-1 truncate">{activity.activity}</h5>
                             <p className="text-xs text-gray-700 mb-2 leading-relaxed">{activity.reason}</p>
                             <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <TimeIcon className="w-3 h-3" />
+                                {activity.duration}
+                              </div>
                               <Badge className={`text-xs px-2 py-0.5 ${getEnergyColor(activity.energyLevel)}`}>
                                 {activity.energyLevel}
                               </Badge>
                               <div className="flex items-center gap-1 text-xs text-gray-600">
                                 <TimeIcon className="w-3 h-3" />
-                                {activity.timeOfDay}
+                                {activity.timeOfDay === "Any" ? "Any time" : activity.timeOfDay}
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <p>- </p>
+                                {activity.name}
                               </div>
                             </div>
                           </div>

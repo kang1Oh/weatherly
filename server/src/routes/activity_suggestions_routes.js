@@ -78,10 +78,16 @@ router.get('/public', async (req, res) => {
 
 // admin: moderate (approve/reject)
 router.put('/:id/status', requireAdmin, async (req, res) => {
-  const { status } = req.body; // 'active' or 'deactive'
+  const { status } = req.body; // 'active' or 'inactive'
   const id = req.params.id;
   const result = await db.query('UPDATE suggestions SET status=$1 WHERE suggestion_id=$2 RETURNING *', [status, id]);
   res.json(result.rows[0]);
+});
+
+router.delete('/:id', requireAdmin, async (req, res) => {
+  const id = req.params.id;
+  await db.query('DELETE FROM suggestions WHERE suggestion_id=$1', [id]);
+  res.json({ deleted: true });
 });
 
 module.exports = router;

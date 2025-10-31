@@ -1,6 +1,9 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 function requireAdmin(req, res, next) {
   const token = req.headers['x-admin-token'];
@@ -10,6 +13,34 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// File upload helpers
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '..', '..', 'public', 'outfits');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    // use original filename
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowed = /png|jpg|jpeg/;
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.test(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only .png, .jpg, and .jpeg files are allowed'));
+    }
+  },
+});
+
 // list images
 router.get('/', async (req, res) => {
   const result = await db.query('SELECT * FROM images ORDER BY created_at DESC');
@@ -17,22 +48,38 @@ router.get('/', async (req, res) => {
 });
 
 // create image (admin)
-router.post('/', requireAdmin, async (req, res) => {
-  const { filename, url, category, tags } = req.body;
-  const result = await db.query(
-    `INSERT INTO images (filename, url, category, tags) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [filename, url, category, tags || []]
-  );
-  res.status(201).json(result.rows[0]);
+router.post('/', requireAdmin, upload.single('file'), async (req, res) => {
+  try {
+    const { category, item_name, type } = req.body;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const filename = file.filename;
+    const url = `/outfits/${filename}`;
+
+    const result = await db.query(
+      `INSERT INTO images (filename, url, category, item_name, type)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [filename, url, category, item_name, type]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error creating image:', err);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
 });
 
 // update image (admin)
 router.put('/:id', requireAdmin, async (req, res) => {
   const id = req.params.id;
-  const { filename, url, category, tags } = req.body;
+  const { filename, url, category, item_name, type } = req.body;
   const result = await db.query(
-    `UPDATE images SET filename=$1, url=$2, category=$3, tags=$4, updated_at=NOW() WHERE image_id=$5 RETURNING *`,
-    [filename, url, category, tags || [], id]
+    `UPDATE images SET filename=$1, url=$2, category=$3, item_name=$4, type=$5, updated_at=NOW() WHERE image_id=$6 RETURNING *`,
+    [filename, url, category, item_name, type, id]
   );
   res.json(result.rows[0]);
 });
