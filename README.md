@@ -40,6 +40,8 @@ Weatherly is a weather application that helps you dress smart and plan better ba
 | Name | Role | Contributions |
 |------|------|----------------|
 | Jane Rose Bandoy | Project Lead | Systems Analysis, Database Management, Full Stack Development |
+| Avi Grace Abellana | UI/UX Designer | Frontend Development |
+| Diana Jhenny Serrano | Database Management | Frontend Development, Database Management |
 
 ---
 
